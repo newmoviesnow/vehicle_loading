@@ -1,9 +1,9 @@
 export const firebaseConfig = {
-  apiKey: "AIzaSyCdPdb4CLTiTMZun6wiv50kH7gjlT6vUCg",
-  authDomain: "vehicle-loading-58584.firebaseapp.com",
-  projectId: "vehicle-loading-58584",
-  storageBucket: "vehicle-loading-58584.firebasestorage.app",
-  messagingSenderId: "682270472680",
-  appId: "1:682270472680:web:8aca958c58c8fc192fecd5d",
-  measurementId: "G-5TCY2MNH80"
+  apiKey: "AIzaSyAXoYRma-MOb_GJLTaYFNH0_XFyfuxILHk",
+  authDomain: "vehicle-loading.firebaseapp.com",
+  projectId: "vehicle-loading",
+  storageBucket: "vehicle-loading.firebasestorage.app",
+  messagingSenderId: "911244899267",
+  appId: "1:911244899267:web:18c34963d4af90078d8376",
+  measurementId: "G-H1B77HE1L9"
 };
