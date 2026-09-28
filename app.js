@@ -26,7 +26,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const ADMIN_EMAIL = "vivekdevmurari517@gmail.com";
-const BUILD = "cloud-v3-auth-fix";
+const BUILD = "cloud-v4-user-profile-fix";
 
 const $ = id => document.getElementById(id);
 const today = new Date();
@@ -55,10 +55,29 @@ $("reportMonth").value = isoDate(today).slice(0, 7);
 $("loadDate").value = isoDate(today);
 $("loadTime").value = new Date().toTimeString().slice(0, 5);
 
+async function ensureUserProfile(user) {
+  if (!user) throw new Error("You are not signed in.");
+  const ref = doc(db, "users", user.uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) return snap.data();
+
+  const email = (user.email || "").trim().toLowerCase();
+  const isKnownAdmin = email === ADMIN_EMAIL.toLowerCase();
+  const profile = {
+    uid: user.uid,
+    name: user.displayName || (user.email || "User").split("@")[0],
+    email: user.email || "",
+    role: isKnownAdmin ? "admin" : "user",
+    createdAt: serverTimestamp()
+  };
+  await setDoc(ref, profile);
+  return { ...profile, role: profile.role };
+}
+
 async function getRole(user) {
   if (user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) return "admin";
-  const snap = await getDoc(doc(db, "users", user.uid));
-  return snap.exists() && snap.data().role === "admin" ? "admin" : "user";
+  const profile = await ensureUserProfile(user);
+  return profile.role === "admin" ? "admin" : "user";
 }
 
 // LOGIN — explicitly prevent normal HTML form submission/reload.
@@ -260,13 +279,22 @@ $("createUserForm").addEventListener("submit", async e => {
     try {
       cred = await createUserWithEmailAndPassword(secondaryAuth, email, pw);
       await updateProfile(cred.user, { displayName: name });
-      await setDoc(doc(db, "users", cred.user.uid), {
+
+      // Write the profile using the PRIMARY admin session. The secondary auth
+      // instance is only used to create the Authentication account, so the
+      // administrator never gets signed out or replaced by the new user.
+      const profileRef = doc(db, "users", cred.user.uid);
+      await setDoc(profileRef, {
         uid: cred.user.uid,
         name,
         email,
         role: "user",
         createdAt: serverTimestamp()
       });
+
+      // Confirm the Firestore profile really exists before reporting success.
+      const verify = await getDoc(profileRef);
+      if (!verify.exists()) throw new Error("User account was created, but the Firestore user profile could not be verified.");
     } finally {
       await signOut(secondaryAuth).catch(() => {});
     }
@@ -307,13 +335,13 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
-// Remove older service workers once, then register the network-first V3 worker.
+// Remove older service workers once, then register the network-first V4 worker.
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
       const regs = await navigator.serviceWorker.getRegistrations();
       for (const reg of regs) await reg.unregister();
-      await navigator.serviceWorker.register("./sw.js?v=3", { updateViaCache: "none" });
+      await navigator.serviceWorker.register("./sw.js?v=4", { updateViaCache: "none" });
     } catch (err) { console.warn("Service worker update skipped", err); }
   });
 }

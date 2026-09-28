@@ -1,4 +1,4 @@
-const CACHE = 'vehicle-loading-cloud-v3';
+const CACHE = 'vehicle-loading-cloud-v4';
 self.addEventListener('install', event => self.skipWaiting());
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
