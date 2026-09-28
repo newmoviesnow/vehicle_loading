@@ -9,6 +9,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
   getFirestore,
+  initializeFirestore,
   collection,
   doc,
   setDoc,
@@ -24,9 +25,13 @@ import { firebaseConfig } from "./firebase-config.js";
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+  // Some company networks/proxies interfere with Firestore WebChannel traffic.
+  // Force HTTP long-polling so Firestore can connect reliably.
+  experimentalForceLongPolling: true
+});
 const ADMIN_EMAIL = "vivekdevmurari517@gmail.com";
-const BUILD = "cloud-v5-user-creation-fix";
+const BUILD = "cloud-v6-firestore-network-fix";
 
 const $ = id => document.getElementById(id);
 const today = new Date();
@@ -359,7 +364,7 @@ if ("serviceWorker" in navigator) {
     try {
       const regs = await navigator.serviceWorker.getRegistrations();
       for (const reg of regs) await reg.unregister();
-      await navigator.serviceWorker.register("./sw.js?v=5", { updateViaCache: "none" });
+      await navigator.serviceWorker.register("./sw.js?v=6", { updateViaCache: "none" });
     } catch (err) { console.warn("Service worker update skipped", err); }
   });
 }
