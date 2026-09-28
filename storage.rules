@@ -1,2 +1,0 @@
-// Firebase Storage is intentionally not used by Cloud V3.
-// The app is designed to remain on the Spark plan without Firebase Storage.
