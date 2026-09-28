@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vehicle Loading</title>
+<link rel="manifest" href="./manifest.webmanifest?v=4">
+<meta name="theme-color" content="#1457d9">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./favicon.png" type="image/png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="./style.css?v=4">
+</head>
+<body>
+<section id="loginView" class="loginWrap">
+  <div class="login">
+    <img class="brandLogo" src="./icon-512.png" alt="Vehicle Loading">
+    <div style="text-align:center;font-weight:800;color:#1268c5;font-size:12px">SECURE COMPANY PORTAL</div>
+    <h1>Vehicle Loading</h1><p class="sub">Sign in to access your loading records</p>
+    <form id="loginForm" novalidate>
+      <div class="field"><label>Email</label><input id="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+      <button type="submit" class="btn primary" style="width:100%">SIGN IN</button>
+      <div id="loginError" class="error"></div>
+    </form>
+    <div class="buildInfo">Cloud V3 • Firebase: vehicle-loading</div>
+  </div>
+</section>
+
+<section id="appView" class="hidden">
+<div class="app">
+<header class="top">
+  <div class="topBrand"><img src="./icon-192.png"><div><b>VEHICLE LOADING</b><small>Rotech Healthcare Pvt. Ltd.</small></div></div>
+  <div class="actions"><span id="roleBadge" class="pill"></span><button id="logoutBtn" class="btn ghost" type="button">Logout</button></div>
+</header>
+<div class="layout">
+<main>
+  <section class="hero">
+    <h1>Loading Control Center</h1><p>Capture loading evidence, keep records cloud-synced, and generate PDF reports.</p>
+    <div class="stats"><div class="stat"><span>Today</span><strong id="todayCount">0</strong></div><div class="stat"><span>This Month</span><strong id="monthCount">0</strong></div><div class="stat"><span>Your Records</span><strong id="totalCount">0</strong></div></div>
+    <div style="margin-top:16px"><button id="newBtn" class="btn" type="button" style="background:#fff;color:#0759a8">＋ NEW VEHICLE LOADING</button></div>
+  </section>
+  <section class="card"><h2>📄 Report Center</h2><div class="reportGrid">
+    <div class="reportBox"><h3>Daily Report</h3><div class="field"><label>Date</label><input id="reportDate" type="date"></div><button id="dayPdf" type="button" class="btn primary">DOWNLOAD DAY PDF</button></div>
+    <div class="reportBox"><h3>Monthly Report</h3><div class="field"><label>Month</label><input id="reportMonth" type="month"></div><button id="monthPdf" type="button" class="btn primary">DOWNLOAD MONTH PDF</button></div>
+  </div></section>
+  <section class="card"><h2>Recent Loadings</h2><div id="records" class="records"></div></section>
+  <section id="adminPanel" class="card hidden">
+    <h2>👨‍💼 Admin — User Management</h2>
+    <div class="reportGrid">
+      <div class="reportBox"><h3>Create User</h3>
+        <form id="createUserForm">
+          <div class="field"><label>Name</label><input id="newName" autocomplete="name" required></div>
+          <div class="field"><label>Email</label><input id="newEmail" type="email" autocomplete="email" required></div>
+          <div class="field"><label>Temporary Password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="6" required><small class="hint">Minimum 6 characters. Do not use your admin password.</small></div>
+          <button id="createUserBtn" type="submit" class="btn primary">CREATE USER</button>
+          <div id="userMsg" class="error"></div>
+        </form>
+      </div>
+      <div class="reportBox"><h3>Company Users</h3><div id="usersList" class="records"></div></div>
+    </div>
+  </section>
+</main>
+<aside class="side">
+  <div class="card"><h2>Signed in as</h2><div class="userChip"><b id="userEmail"></b><br><small id="userRole"></small></div></div>
+  <div class="card"><h2>Cloud Records</h2><p style="color:var(--muted);font-size:13px;line-height:1.6">Records are stored in Firebase Firestore and separated by user. Photos are kept locally for PDF generation, so this version does not require Firebase Storage.</p></div>
+</aside>
+</div>
+<div class="footer">Developed By: Vivek Devmurari • Rotech Healthcare Pvt. Ltd.</div>
+</div>
+</section>
+
+<div id="modal" class="modal hidden">
+ <div class="modalBox">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>New Vehicle Loading</h2><button id="closeModal" type="button" class="btn ghost">Close</button></div>
+  <form id="loadingForm">
+   <div class="reportGrid">
+    <div class="field"><label>Vehicle Number</label><input id="vehicle" required></div>
+    <div class="field"><label>Brand</label><input id="brand" required></div>
+    <div class="field"><label>Date</label><input id="loadDate" type="date" required></div>
+    <div class="field"><label>Time</label><input id="loadTime" type="time" required></div>
+   </div>
+   <div class="field"><label>Overall Remarks (optional)</label><textarea id="overallRemarks" rows="3"></textarea></div>
+   <div class="field"><label>Loading Photos</label><input id="photos" type="file" accept="image/*" capture="environment" multiple required></div>
+   <div id="photoList" class="photoList"></div>
+   <div id="saveMsg" class="error"></div>
+   <div class="actions"><button type="submit" class="btn primary">SAVE LOADING & DOWNLOAD PDF</button><button type="button" id="saveDriveBtn" class="btn ghost">SAVE + PDF + DRIVE</button></div>
+  </form>
+ </div>
+</div>
+<script type="module" src="./app.js?v=4"></script>
+</body></html>
