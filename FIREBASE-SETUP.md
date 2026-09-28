@@ -1,4 +1,4 @@
-# Vehicle Loading Cloud V3 — Setup
+# Vehicle Loading Cloud V4 — Setup
 
 ## Firebase project
 Use the existing project **vehicle-loading**. Do not create another project.
@@ -24,7 +24,7 @@ Admin profile document:
 - `uid`: the same UID
 
 ## Storage / Billing
-Cloud V3 does **not** import or use Firebase Storage. Photos stay in the browser and are used to generate the local PDF. Firestore stores loading metadata and photo remarks. This avoids requiring Blaze billing for Storage.
+Cloud V4 does **not** import or use Firebase Storage. Photos stay in the browser and are used to generate the local PDF. Firestore stores loading metadata and photo remarks. This avoids requiring Blaze billing for Storage.
 
 ## GitHub Pages
 Upload all files in this ZIP to the root of the `newmoviesnow/vehicle_loading` repository.
