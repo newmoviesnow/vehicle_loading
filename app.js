@@ -20,18 +20,17 @@ import {
   orderBy,
   limit,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-lite.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = initializeFirestore(app, {
-  // Some company networks/proxies interfere with Firestore WebChannel traffic.
-  // Force HTTP long-polling so Firestore can connect reliably.
-  experimentalForceLongPolling: true
-});
+// Firestore Lite uses REST directly and avoids the browser WebChannel.
+// This is useful for company/proxy networks that make the full Firestore
+// Web SDK report "client is offline" even when Authentication works.
+const db = getFirestore(app);
 const ADMIN_EMAIL = "vivekdevmurari517@gmail.com";
-const BUILD = "cloud-v6-firestore-network-fix";
+const BUILD = "cloud-v7-firestore-lite";
 
 const $ = id => document.getElementById(id);
 const today = new Date();
