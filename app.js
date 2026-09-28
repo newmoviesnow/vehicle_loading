@@ -26,7 +26,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const ADMIN_EMAIL = "vivekdevmurari517@gmail.com";
-const BUILD = "cloud-v4-user-profile-fix";
+const BUILD = "cloud-v5-user-creation-fix";
 
 const $ = id => document.getElementById(id);
 const today = new Date();
@@ -260,42 +260,60 @@ async function loadUsers() {
   }).join("") || '<div class="empty">No user profiles.</div>';
 }
 
-// USER CREATION — use a real form + submit handler so the page can NEVER refresh.
+// USER CREATION — keep the admin session on the primary Auth instance.
+// Every network operation has a timeout so the UI can never remain stuck on
+// “Creating user…” forever.
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${Math.round(ms / 1000)} seconds. Check your internet connection and Firestore rules.`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 $("createUserForm").addEventListener("submit", async e => {
   e.preventDefault();
   e.stopPropagation();
-  setMsg("userMsg", "Creating user…");
   try {
     if (!currentUser || !isAdmin) throw new Error("Only an administrator can create users.");
     const name = $("newName").value.trim();
-    const email = $("newEmail").value.trim();
+    const email = $("newEmail").value.trim().toLowerCase();
     const pw = $("newPassword").value;
     if (!name || !email || pw.length < 6) throw new Error("Name, email and a password of at least 6 characters are required.");
 
+    setMsg("userMsg", "Step 1/3 — Creating authentication account…");
     const secondaryName = "userCreator";
     const secondary = getApps().find(a => a.name === secondaryName) || initializeApp(firebaseConfig, secondaryName);
     const secondaryAuth = getAuth(secondary);
-    let cred;
+    let cred = null;
     try {
-      cred = await createUserWithEmailAndPassword(secondaryAuth, email, pw);
-      await updateProfile(cred.user, { displayName: name });
+      cred = await withTimeout(
+        createUserWithEmailAndPassword(secondaryAuth, email, pw),
+        15000,
+        "Authentication account creation"
+      );
 
-      // Write the profile using the PRIMARY admin session. The secondary auth
-      // instance is only used to create the Authentication account, so the
-      // administrator never gets signed out or replaced by the new user.
+      setMsg("userMsg", "Step 2/3 — Creating Firestore user profile…");
+      // Use the PRIMARY admin session for Firestore. The secondary Auth app is
+      // only for creating the account, so the administrator stays signed in.
       const profileRef = doc(db, "users", cred.user.uid);
-      await setDoc(profileRef, {
-        uid: cred.user.uid,
-        name,
-        email,
-        role: "user",
-        createdAt: serverTimestamp()
-      });
+      await withTimeout(
+        setDoc(profileRef, {
+          uid: cred.user.uid,
+          name,
+          email,
+          role: "user",
+          createdAt: serverTimestamp()
+        }),
+        15000,
+        "Firestore user profile creation"
+      );
 
-      // Confirm the Firestore profile really exists before reporting success.
-      const verify = await getDoc(profileRef);
-      if (!verify.exists()) throw new Error("User account was created, but the Firestore user profile could not be verified.");
+      setMsg("userMsg", "Step 3/3 — Verifying user profile…");
+      const verify = await withTimeout(getDoc(profileRef), 15000, "Firestore user profile verification");
+      if (!verify.exists()) throw new Error("Authentication account was created, but the Firestore user profile could not be verified.");
     } finally {
+      // Never let cleanup hide the real error.
       await signOut(secondaryAuth).catch(() => {});
     }
 
@@ -341,7 +359,7 @@ if ("serviceWorker" in navigator) {
     try {
       const regs = await navigator.serviceWorker.getRegistrations();
       for (const reg of regs) await reg.unregister();
-      await navigator.serviceWorker.register("./sw.js?v=4", { updateViaCache: "none" });
+      await navigator.serviceWorker.register("./sw.js?v=5", { updateViaCache: "none" });
     } catch (err) { console.warn("Service worker update skipped", err); }
   });
 }
